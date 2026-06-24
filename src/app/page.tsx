@@ -86,7 +86,21 @@ export default function Home() {
       .then((data: ConvData[]) => {
         const convs = data.map(toConversation);
         setConversations(convs);
-        if (convs.length > 0) setActiveId(convs[0].id);
+        if (convs.length > 0) {
+          setActiveId(convs[0].id);
+          return;
+        }
+        return fetch("/api/conversations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({}),
+        }).then((r) => (r.ok ? r.json() : null) as Promise<ConvData | null>);
+      })
+      .then((created) => {
+        if (!created?._id) return;
+        const conv = toConversation(created);
+        setConversations([conv]);
+        setActiveId(conv.id);
       })
       .catch(() => setInitError(true));
   }, []);
